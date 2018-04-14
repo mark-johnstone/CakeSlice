@@ -21,6 +21,25 @@ var moneyIncreaseRate = 1;
 var moneyTimerLength = 2000; // length of time in ms 
 var upgradeCost=5; 
 
+var upsidedownpineapplecakeUpgradeCost=10;
+var upsidedownpineapplecakeMoneyIncrease = 3; 
+var upsidedownpineapplecakeTimer = 10000;
+
+var muffinsUpgradeCost=5;
+var muffinsMoneyIncrease=2;
+var muffinsTimer=8000;
+
+
+var victoriaspongeUpgradeCost=10; 
+var victoriaspongeMoneyIncrease=5; 
+var victoriaspongeTimer=20000;
+
+var redvelvetUpgradeCost=30;
+var redvelvetMoneyIncrease=15; 
+var redvelvetTimer=100000;
+
+
+var timersPositionY=100;
 /*
 
 */
@@ -31,18 +50,17 @@ function preload(){
     this.load.image('goldCoin','assets/GoldCoin.png');
     this.load.image('goldBar','assets/GoldBar.png');
     this.load.image('oven', 'assets/oven.png');
-
 }
 
 function create() {
 
   /*
-  Creates a timer variable which uses the moneyTimerLength as the time length
-  and calls updateText upon reaching 0.
+  Creates a timer variable for each of our cake types using the time value for each
+  that increments the total money upon finish
   */
-  moneyTimer = game.time.create(false);
-  moneyTimer.loop(moneyTimerLength, updateText);
-  moneyTimer.start(); 
+  createTimers(); 
+
+  
 
 
   /*
@@ -56,10 +74,19 @@ function create() {
       align: "right"
   });
   moneyIcon.addChild(text);
+
   // creates a sprite which calls the upgradeMoney function when clicked.
-  var upgradeMoneySprite = game.add.sprite(game.world.centerX, game.world.centerY, 'goldBar');
+  var upgradeMoneySprite = game.add.sprite(250, timersPositionY, 'goldBar');
   upgradeMoneySprite.inputEnabled = true; 
   upgradeMoneySprite.events.onInputDown.add(upgradeMoney);
+
+   var upgradeVictoriaSpongeSprite = game.add.sprite(250, timersPositionY+200, 'goldBar');
+  upgradeVictoriaSpongeSprite.inputEnabled = true; 
+  upgradeVictoriaSpongeSprite.events.onInputDown.add(upgradeVictoriaSponge);
+  
+var upgradeRedvelvetSprite = game.add.sprite(250, timersPositionY+300, 'goldBar');
+  upgradeRedvelvetSprite.inputEnabled = true; 
+  upgradeRedvelvetSprite.events.onInputDown.add(upgradeRedvelvet);
 
 }
 
@@ -67,8 +94,15 @@ function create() {
 Displays the timer on screen - there may be a better way of doing this. 
 */
 function render(){
-  game.debug.text(moneyTimer.duration, 32, 32);
+  game.debug.text("money timer :"+  moneyTimer.duration, 32, timersPositionY);
+  game.debug.text("muffins timer:"+ muffinsTime.duration, 32, timersPositionY+100);
+  game.debug.text("victoria sponge timer:" + victoriaspongeTime.duration, 32,timersPositionY+200);
+  game.debug.text("increase:"+victoriaspongeMoneyIncrease, 532, timersPositionY+200);
+  game.debug.text("cost:" + victoriaspongeUpgradeCost,332, timersPositionY+200);
 
+  game.debug.text("red velvet timer:"+ redvelvetTime.duration, 32, timersPositionY+300);
+  game.debug.text("increase:"+redvelvetMoneyIncrease, 532, timersPositionY+300);
+  game.debug.text("cost:" + redvelvetUpgradeCost,332, timersPositionY+300);
 }
 
 function update() {
@@ -97,5 +131,51 @@ so that it refreshes on screen.
 
 function updateText() {
   totalMoney+= moneyIncreaseRate;
+  text.setText("    "+totalMoney);
+}
+
+function createTimers(){
+   moneyTimer = game.time.create(false);
+   moneyTimer.loop(moneyTimerLength, updateText);
+   moneyTimer.start();
+
+
+   muffinsTime = game.time.create(false);
+   muffinsTime.loop(muffinsTimer, updateText);
+   muffinsTime.start(); 
+
+   victoriaspongeTime = game.time.create(false);
+   victoriaspongeTime.loop(victoriaspongeTimer, updateVictoriaSpongeText);
+   victoriaspongeTime.start();
+
+   redvelvetTime = game.time.create(false);
+   redvelvetTime.loop(redvelvetTimer, updateRedvelvetText);
+   redvelvetTime.start();
+}
+
+function upgradeRedvelvet(){
+  if(totalMoney>=redvelvetUpgradeCost){
+    totalMoney-+redvelvetUpgradeCost;
+    redvelvetUpgradeCost*=1.05;
+    redvelvetMoneyIncrease+=5;
+  }
+}
+
+function updateRedvelvetText(){
+  totalMoney+=redvelvetMoneyIncrease;
+  text.setText("    "+totalMoney);
+}
+
+function upgradeVictoriaSponge(){
+  if(totalMoney>=victoriaspongeUpgradeCost){
+    totalMoney-=victoriaspongeUpgradeCost;
+    victoriaspongeUpgradeCost+=2;
+    victoriaspongeMoneyIncrease+=2;
+    text.setText("    "+totalMoney);
+  }
+}
+
+function updateVictoriaSpongeText(){
+  totalMoney+=victoriaspongeMoneyIncrease;
   text.setText("    "+totalMoney);
 }
