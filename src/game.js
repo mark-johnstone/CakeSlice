@@ -6,19 +6,25 @@ var config = {
     scene: {
         preload: preload,
         create: create,
-        update: update
+        update: update,
+        render: render
     }
 };
 
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '',{preload: preload, create: create, update: update });
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '',{preload: preload, create: create, update: update, render: render });
 
 var text;
-var count;
+var totalMoney=0;
 var moneyTimer;
+var moneyIncreaseRate = 1; 
+var moneyTimerLength = 2000; // length of time in ms 
+var upgradeCost=5; 
 
+/*
+
+*/
 function preload(){
-    this.load.image('cakeimg', 'assets/cakeimg.png');
     this.load.image('pudding', 'assets/pudding.jpg');
     this.load.image('castlecake', 'assets/castlecake.jpg');
     this.load.image('bakery', 'assets/bakery.jpg');
@@ -30,43 +36,66 @@ function preload(){
 
 function create() {
 
-    count = 0;
+  /*
+  Creates a timer variable which uses the moneyTimerLength as the time length
+  and calls updateText upon reaching 0.
+  */
+  moneyTimer = game.time.create(false);
+  moneyTimer.loop(moneyTimerLength, updateText);
+  moneyTimer.start(); 
 
-    // create timer
-    moneyTimer = game.time.create(false);
-    // set the timer event to occur after 2 seconds
-    moneyTimer.loop(2000, updateText);
-    // start the timer
-    moneyTimer.start(); 
 
-    var moneyIcon = game.add.sprite(game.world.innerWidth, game.world.innerHeight, 'goldCoin');
-    text = game.add.text(0, 0, ""+count, {
-        font: "35px Arial",
-        fill: "#ff0044",
-        align: "right"
-    });
-    moneyIcon.addChild(text);
-    
-    // text.anchor.setTo(0, 0);
+  /*
+  Creates the visual icon used to represent money and attaches the 
+  totalMoney variable to show how much is owned by the player.  
+  */
+  var moneyIcon = game.add.sprite(game.world.innerWidth, game.world.innerHeight, 'goldCoin');
+  text = game.add.text(0, 0, "    "+totalMoney, {
+      font: "35px Arial",
+      fill: "#ff0044",
+      align: "right"
+  });
+  moneyIcon.addChild(text);
+  // creates a sprite which calls the upgradeMoney function when clicked.
+  var upgradeMoneySprite = game.add.sprite(game.world.centerX, game.world.centerY, 'goldBar');
+  upgradeMoneySprite.inputEnabled = true; 
+  upgradeMoneySprite.events.onInputDown.add(upgradeMoney);
 
-    var ovenSprite = game.add.sprite(game.world.centerX, game.world.centerY, 'oven');
-    ovenSprite.anchor.setTo(0.5,0.5);
+}
 
-    var moneyIcon = game.add.sprite(game.world.innerWidth, game.world.innerHeight, 'goldCoin');
-    moneyIcon.addChild(text);
+/*
+Displays the timer on screen - there may be a better way of doing this. 
+*/
+function render(){
+  game.debug.text(moneyTimer.duration, 32, 32);
 
 }
 
 function update() {
-
-    game.input.onDown.addOnce(updateText, this);
-
+ 
 }
 
+/*
+Checks that the player has money available to buy the upgrade. 
+If so deduct the cost of upgrading, increate the money increase
+rate and cost of next update then set the text so that it refreshes
+on screen.
+*/
+function upgradeMoney(){
+  if(totalMoney>=upgradeCost){
+    totalMoney-=upgradeCost;
+    moneyIncreaseRate+= 1;
+    upgradeCost+=1;
+    text.setText("    "+totalMoney);
+  }
+}
+
+/*
+Updates the total money by adding the increase rate to it and sets text 
+so that it refreshes on screen.
+*/
 
 function updateText() {
-
-    count++;
-
-    text.setText("    "+count);
+  totalMoney+= moneyIncreaseRate;
+  text.setText("    "+totalMoney);
 }
