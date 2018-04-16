@@ -25,19 +25,10 @@ var upsidedownpineapplecakeUpgradeCost=10;
 var upsidedownpineapplecakeMoneyIncrease = 3; 
 var upsidedownpineapplecakeTimer = 10000;
 
-var muffinsUpgradeCost=5;
-var muffinsMoneyIncrease=2;
-var muffinsTimer=8000;
 
-
-var victoriaspongeUpgradeCost=10; 
-var victoriaspongeMoneyIncrease=5; 
-var victoriaspongeTimer=20000;
-
-var redvelvetUpgradeCost=30;
-var redvelvetMoneyIncrease=15; 
-var redvelvetTimer=100000;
-
+var chocolatecake = createCake(100,600,15000,1.05);
+var victoriasponge = createCake(5,10,20000,1.05);
+var redvelvet = createCake(15, 30, 30000, 1.05);
 
 var timersPositionY=100;
 /*
@@ -50,6 +41,10 @@ function preload(){
     this.load.image('goldCoin','assets/GoldCoin.png');
     this.load.image('goldBar','assets/GoldBar.png');
     this.load.image('oven', 'assets/oven.png');
+
+//     // You can use your own methods of making the plugin publicly available. Setting it as a global variable is the easiest solution.
+// slickUI = game.plugins.add(Phaser.Plugin.SlickUI);
+// slickUI.load('assets/ui/kenney/kenney.json'); // Use the path to your kenney.json. This is the file that defines your theme.
 }
 
 function create() {
@@ -82,11 +77,11 @@ function create() {
 
    var upgradeVictoriaSpongeSprite = game.add.sprite(250, timersPositionY+200, 'goldBar');
   upgradeVictoriaSpongeSprite.inputEnabled = true; 
-  upgradeVictoriaSpongeSprite.events.onInputDown.add(upgradeVictoriaSponge);
+  upgradeVictoriaSpongeSprite.events.onInputDown.add(victoriasponge.upgradeRecipe);
   
 var upgradeRedvelvetSprite = game.add.sprite(250, timersPositionY+300, 'goldBar');
   upgradeRedvelvetSprite.inputEnabled = true; 
-  upgradeRedvelvetSprite.events.onInputDown.add(upgradeRedvelvet);
+  // upgradeRedvelvetSprite.events.onInputDown.add(upgradeRedvelvet);
 
 }
 
@@ -94,15 +89,13 @@ var upgradeRedvelvetSprite = game.add.sprite(250, timersPositionY+300, 'goldBar'
 Displays the timer on screen - there may be a better way of doing this. 
 */
 function render(){
-  game.debug.text("money timer :"+  moneyTimer.duration, 32, timersPositionY);
-  game.debug.text("muffins timer:"+ muffinsTime.duration, 32, timersPositionY+100);
-  game.debug.text("victoria sponge timer:" + victoriaspongeTime.duration, 32,timersPositionY+200);
-  game.debug.text("increase:"+victoriaspongeMoneyIncrease, 532, timersPositionY+200);
-  game.debug.text("cost:" + victoriaspongeUpgradeCost,332, timersPositionY+200);
+  game.debug.text("victoria sponge timer:" + victoriaspongeTimer.duration, 32,timersPositionY+200);
+  game.debug.text("increase:"+victoriasponge.moneyIncrease, 532, timersPositionY+200);
+  game.debug.text("cost:" + victoriasponge.upgradeCost,332, timersPositionY+200);
 
-  game.debug.text("red velvet timer:"+ redvelvetTime.duration, 32, timersPositionY+300);
-  game.debug.text("increase:"+redvelvetMoneyIncrease, 532, timersPositionY+300);
-  game.debug.text("cost:" + redvelvetUpgradeCost,332, timersPositionY+300);
+  game.debug.text("red velvet timer:"+ redvelvetTimer.duration, 32, timersPositionY+300);
+  game.debug.text("increase:"+redvelvet.moneyIncrease, 532, timersPositionY+300);
+  game.debug.text("cost:" + redvelvet.upgradeCost,332, timersPositionY+300);
 }
 
 function update() {
@@ -139,43 +132,39 @@ function createTimers(){
    moneyTimer.loop(moneyTimerLength, updateText);
    moneyTimer.start();
 
+   victoriaspongeTimer = game.time.create(false);
+   victoriaspongeTimer.loop(victoriasponge.timerLength, victoriasponge.sellCake);
+   victoriaspongeTimer.start();
 
-   muffinsTime = game.time.create(false);
-   muffinsTime.loop(muffinsTimer, updateText);
-   muffinsTime.start(); 
+   redvelvetTimer = game.time.create(false);
+   redvelvetTimer.loop(redvelvet.timerLength, redvelvet.sellCake);
+   redvelvetTimer.start();
 
-   victoriaspongeTime = game.time.create(false);
-   victoriaspongeTime.loop(victoriaspongeTimer, updateVictoriaSpongeText);
-   victoriaspongeTime.start();
-
-   redvelvetTime = game.time.create(false);
-   redvelvetTime.loop(redvelvetTimer, updateRedvelvetText);
-   redvelvetTime.start();
 }
 
-function upgradeRedvelvet(){
-  if(totalMoney>=redvelvetUpgradeCost){
-    totalMoney-+redvelvetUpgradeCost;
-    redvelvetUpgradeCost*=1.05;
-    redvelvetMoneyIncrease+=5;
+function createCake(moneyIncreaseRate, upgradeCost, timerLength, multiplier){
+  
+  var obj={};
+  obj.moneyIncrease=moneyIncreaseRate;
+  obj.upgradeCost=upgradeCost;
+  obj.timerLength=timerLength;
+  obj.upgradeMultiplier = multiplier; 
+  
+  //TODO find a way to create the timer in here
+
+  obj.upgradeRecipe = function (){
+    if(totalMoney>=obj.upgradeCost){
+      totalMoney-=obj.upgradeCost; 
+      obj.upgradeCost=multiplier * upgradeCost;
+      obj.moneyIncrease+=5;
+      text.setText("    "+totalMoney);
+    }
   }
-}
-
-function updateRedvelvetText(){
-  totalMoney+=redvelvetMoneyIncrease;
-  text.setText("    "+totalMoney);
-}
-
-function upgradeVictoriaSponge(){
-  if(totalMoney>=victoriaspongeUpgradeCost){
-    totalMoney-=victoriaspongeUpgradeCost;
-    victoriaspongeUpgradeCost+=2;
-    victoriaspongeMoneyIncrease+=2;
+  obj.sellCake = function () {
+    totalMoney+= obj.moneyIncrease; 
     text.setText("    "+totalMoney);
   }
+  return obj;
 }
 
-function updateVictoriaSpongeText(){
-  totalMoney+=victoriaspongeMoneyIncrease;
-  text.setText("    "+totalMoney);
-}
+
